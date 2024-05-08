@@ -1,70 +1,66 @@
-using System.Collections.Generic;
+namespace Badges.Repository;
 
-namespace Badges.Repository
-
-public class Dictionary
-{
-  Dictionary<int, List<string>> _badgeDictionary = new Dictionary<int, List<string>>();
-
-  // Create
-  public void CreateBadge(Badge badge)
+  public class BadgeDictionary
   {
-    _badgeDictionary.Add(badge.BadgeID, badge.DoorNameList);
-  }
+    private Dictionary<int, List<string>> _badgeDictionary = new Dictionary<int, List<string>>();
 
-  // Read
-  public Dictionary<int, List<string>> GetDictionary ()
-  {
-    return new Dictionary<int, List<string>>(_badgeDictionary);
-  }
-
-  // Update
-  public bool UpdateExistingBadge(int originalID, Badges newBadge)
-  {
-    // Find the badge
-    Badge oldBadge = GetBadgeByID(originalID);
-
-    // Update the badge
-    if (oldBadge != null)
+    // Create
+    public void CreateBadge(Badge badge)
     {
-      oldBadge.BadgeID = newBadge.BadgeID;
-      oldBadge.DoorNameList = newBadge.DoorNameList;
-      oldBadge.BadgeName = newBadge.BadgeName;
-    }
-  }
-
-  // Delete
-  public bool RemoveBadgeFromDictionary(int id)
-  {
-    Badge badge = GetBadgeByID(id);
-
-    if (badge == null)
-    {
-      return false;
+      _badgeDictionary.Add(badge.BadgeID, badge.DoorNameList);
     }
 
-    int intitialCount = _badgeDictionary.Count;
-    _badgeDictionary.Remove(badge);
-
-    if (intitialCount > _badgeDictionary.Count)
+   // Read
+    public Dictionary<int, List<string>> GetDictionary()
     {
-      return true;
+      return new Dictionary<int, List<string>>(_badgeDictionary);
     }
-    else {
-      return false;
-    }
-  }
 
-  // Find a badge by the id
-  public Badge GetBadgeByID(string id)
-  {
-    foreach(Badge badge in _badgeDictionary)
+    // Update
+    public bool UpdateExistingBadge(int originalID, List<string> newList)
     {
-      if(badge.BadgeID == id)
+     // Find the badge
+      bool foundID = ValidateID(originalID);
+      List<string> oldBadgeList = _badgeDictionary[originalID];
+
+      // Update the badge list
+      if (foundID == true)
+     {
+        oldBadgeList = newList;
+
+       return true;
+      }
+      else 
       {
-        return badge;
+        return false;
       }
     }
-    return null;
+
+    // Delete
+    public bool RemoveBadgeFromDictionary(int id)
+    {
+      bool valid = ValidateID(id);
+
+      int intitialCount = _badgeDictionary.Count;
+      _badgeDictionary.Remove(id);
+
+      if (intitialCount > _badgeDictionary.Count)
+      {
+       return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    // Find a badge by the id
+   public bool ValidateID(int id)
+    {
+      if (_badgeDictionary.ContainsKey(id))
+      {
+        return true;
+      }
+      return false;
+    }
   }
-}
+

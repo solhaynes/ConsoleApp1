@@ -5,6 +5,12 @@ namespace Badges.Console;
 public class BadgesUI 
 {
   private BadgeDictionary _badgeRepo = new BadgeDictionary();
+
+  public void Run()
+  {
+    SeedContentList();
+    Menu();
+  }
   private void Menu()
   {
     bool keepRunning = true;
@@ -30,11 +36,11 @@ public class BadgesUI
           break;
         case "2": 
         // Edit a badge
-          
+          EditBadge();
           break;
         case "3": 
         // List all badges
-          
+          DisplayAllBadges();
           break;
         case "4": 
         //Exit
@@ -73,7 +79,7 @@ public class BadgesUI
       string secondInput = System.Console.ReadLine();
       if (secondInput== "y" || secondInput == "n")
         {
-          done = AddAnotherBadge(secondInput);
+          done = AddAnotherDoor(secondInput);
         }
         else{
           System.Console.WriteLine("Invalid response.  Please try again.");
@@ -88,15 +94,15 @@ public class BadgesUI
   }
 
 // Helper method for AddBadge
-  private bool AddAnotherBadge(string input)
+  private bool AddAnotherDoor(string input)
   {
     if (input == "y")
     {
-      return true;
+      return false;
     }
     else
     {
-      return false;
+      return true;
     }
   }
 
@@ -109,6 +115,7 @@ public class BadgesUI
 
     while (!validID)
     {
+      DisplayAllBadges();
       System.Console.Write("What is the badge number to update? ");
       userInput =  int.Parse(System.Console.ReadLine());
 
@@ -116,18 +123,26 @@ public class BadgesUI
 
       if (validID)
       {
-        System.Console.WriteLine("How would you like to update the badge?\n " + 
+        System.Console.WriteLine("How would you like to update the badge?\n" + 
         "   1. Remove a door \n" +
-        "   2. Add a door");
+        "   2. Remove all doors \n" +
+        "   3. Add a door");
 
         response = System.Console.ReadLine();
 
         switch (response)
         {
           case "1": 
+          // remove a single door
             RemoveDoorFromBadge(userInput);
             break;
           case "2": 
+          // remove all doors from badge
+            RemoveAllDoorsFromBadge(userInput);
+            break;
+          case "3":
+          // Add a door
+            AddDoorToBadge(userInput);
             break;
           default:
             System.Console.WriteLine("Please make a valid selection");
@@ -138,17 +153,17 @@ public class BadgesUI
   }
 
   // Helper methods for EditBadge()
-  private bool RemoveDoorFromBadge(int badgeIDNumber)
+  private void RemoveDoorFromBadge(int badgeIDNumber)
   {
-    string input;
-    bool doorExists = false;
-    List<string> doorList = _badgeRepo[badgeIDNumber];
+    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
+    List<string> doorList = badgeDictionary[badgeIDNumber];
+
     bool doorRemoved = false;
 
-    showDoors(badgeIDNumber);
+    ShowDoors(badgeIDNumber);
 
     System.Console.WriteLine("Which door would you like to remove access to?");
-    input = System.Console.ReadLine();
+    string input = System.Console.ReadLine();
 
       foreach (string door in doorList)
       {
@@ -159,10 +174,12 @@ public class BadgesUI
         }
       }
 
+      // bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
+
       if(doorRemoved)
       {
         System.Console.WriteLine("Door successfully removed.");
-        _badgeRepo.showDoors(badgeIDNumber);
+        ShowDoors(badgeIDNumber);
       }
       else 
       {
@@ -170,9 +187,56 @@ public class BadgesUI
       }
   }
 
-  private void showDoors(int badgeIDNumber)
+  private void RemoveAllDoorsFromBadge(int badgeIDNumber)
   {
-    List<string> doorList = _badgeRepo[badgeIDNumber];
+    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
+    var doorList = badgeDictionary[badgeIDNumber].ToList();
+
+    bool doorsRemoved = false;
+
+    foreach (string door in doorList)
+      {
+        doorList.Remove(door);
+      }
+
+      bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
+
+      if(doorList.Count == 0)
+      {
+        doorsRemoved = true;
+      }
+
+      if(doorsRemoved)
+      {
+        System.Console.WriteLine("All doors successfully removed.");
+      }
+      else 
+      {
+        System.Console.WriteLine("Door could not be removed. Try again later.");
+      }
+  }
+
+  private void AddDoorToBadge(int badgeIDNumber)
+  {
+    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
+    List<string> doorList = badgeDictionary[badgeIDNumber];
+    
+    // display doors the badge currently has access to
+    ShowDoors(badgeIDNumber);
+    System.Console.WriteLine("What door would you like to add to badge" + badgeIDNumber + "?");
+    string userInput = System.Console.ReadLine();
+
+    doorList.Add(userInput);
+
+    bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
+
+    System.Console.WriteLine("Door " + userInput + " was added to the list.\n");
+    ShowDoors(badgeIDNumber);
+  }
+  private void ShowDoors(int badgeIDNumber)
+  {
+    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
+    List<string> doorList = badgeDictionary[badgeIDNumber];
     
     System.Console.Write("Badge " + badgeIDNumber + " has access to: ");
     
@@ -182,5 +246,50 @@ public class BadgesUI
     }
 
     System.Console.WriteLine();
+  }
+
+  // Display all badges
+  private void DisplayAllBadges()
+  {
+    Dictionary<int, List<string>> dictionary = _badgeRepo.GetDictionary();
+
+    System.Console.WriteLine("\nAll badges in dictionary: ");
+    System.Console.WriteLine("Badge ID     Doors it can access");
+
+    foreach (KeyValuePair<int, List<string>> badge in dictionary)
+    {
+      System.Console.Write(badge.Key + "         ");
+      badge.Value.ForEach(door => System.Console.Write(door + " "));
+      System.Console.WriteLine();
+    }
+
+  }
+
+  private void SeedContentList()
+  {
+    int id1 = 1234;
+    int id2 = 4321;
+    int id3 = 6969;
+    int id4 = 2319;
+
+    List<string> list1 = new List<string> {"A2", "B1", "C3"};
+    List<string> list2 = new List<string> {"A2", "A3", "C1", "D1"};
+    List<string> list3 = new List<string> {"A2", "B1"};
+    List<string> list4 = new List<string> {"A1", "B1", "B1"};
+
+    string name1 = "badge1";
+    string name2 = "badge2";
+    string name3 = "badge3";
+    string name4 = "badge4";
+
+    Badge badge1 = new Badge(id1, list1, name1);
+    Badge badge2 = new Badge(id2, list2, name2);
+    Badge badge3 = new Badge(id3, list3, name3);
+    Badge badge4 = new Badge(id4, list4, name4);
+
+    _badgeRepo.CreateBadge(badge1);
+    _badgeRepo.CreateBadge(badge2);
+    _badgeRepo.CreateBadge(badge3);
+    _badgeRepo.CreateBadge(badge4);
   }
 }

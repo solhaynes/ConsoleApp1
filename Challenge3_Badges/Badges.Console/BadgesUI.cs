@@ -19,10 +19,11 @@ public class BadgesUI
     {
       // Display options to the user
     System.Console.WriteLine("Hello, Security Admin. What would you like to do? \n" +
-      "1. Add a badge\n" +
-      "2. Edit a badge\n" +
-      "3. List all badges\n" +
-      "4. Exit");
+      "1. Add a badge to repository\n" +
+      "2. Delete a badge from repository\n" +
+      "3. Edit a badge\n" +
+      "4. Show all badges and doors in repository\n" +
+      "5. Exit");
 
       // Get user's input
       string input = System.Console.ReadLine();
@@ -35,14 +36,18 @@ public class BadgesUI
           AddBadge();
           break;
         case "2": 
-        // Edit a badge
+        // Delete a badge from the repository
+          RemoveBadge();
+          break;
+        case "3":
+        // edit a badge in the repository
           EditBadge();
           break;
-        case "3": 
-        // List all badges
-          DisplayAllBadges();
-          break;
         case "4": 
+        // List all badges
+          _badgeRepo.DisplayAllBadges();
+          break;
+        case "5": 
         //Exit
           System.Console.WriteLine("Goodbye!");
           keepRunning = false;
@@ -93,6 +98,26 @@ public class BadgesUI
     _badgeRepo.CreateBadge(newBadge);
   }
 
+  private void RemoveBadge()
+  {
+    _badgeRepo.DisplayAllBadges();
+
+    System.Console.Write("\nWhich badge would you like to remove from the repository?");
+    int userInput = int.Parse(System.Console.ReadLine());
+
+    bool badgeDeleted = _badgeRepo.RemoveBadgeFromDictionary(userInput);
+
+    if(badgeDeleted)
+    {
+      System.Console.WriteLine("Badge was successfully removed from the repository.");
+    }
+    else
+    {
+      System.Console.WriteLine("Badge could not be removed from the repository.");
+    }
+
+  }
+
 // Helper method for AddBadge
   private bool AddAnotherDoor(string input)
   {
@@ -115,7 +140,7 @@ public class BadgesUI
 
     while (!validID)
     {
-      DisplayAllBadges();
+      _badgeRepo.DisplayAllBadges();
       System.Console.Write("What is the badge number to update? ");
       userInput =  int.Parse(System.Console.ReadLine());
 
@@ -123,7 +148,7 @@ public class BadgesUI
 
       if (validID)
       {
-        System.Console.WriteLine("How would you like to update the badge?\n" + 
+        System.Console.WriteLine("\nHow would you like to update the badge?\n" + 
         "   1. Remove a door \n" +
         "   2. Remove all doors \n" +
         "   3. Add a door");
@@ -155,11 +180,11 @@ public class BadgesUI
   // Helper methods for EditBadge()
   private void RemoveDoorFromBadge(int badgeIDNumber)
   {
-    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
-    List<string> doorList = badgeDictionary[badgeIDNumber];
+    List<string> doorList = _badgeRepo.GetListByID(badgeIDNumber);
 
     bool doorRemoved = false;
 
+    // Display doors the badge has access to
     ShowDoors(badgeIDNumber);
 
     System.Console.WriteLine("Which door would you like to remove access to?");
@@ -169,12 +194,9 @@ public class BadgesUI
       {
         if (door == input)
         {
-          doorList.Remove(door);
-          doorRemoved = true;
+          doorRemoved = _badgeRepo.RemoveDoorFromList(badgeIDNumber, input);
         }
       }
-
-      // bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
 
       if(doorRemoved)
       {
@@ -189,54 +211,42 @@ public class BadgesUI
 
   private void RemoveAllDoorsFromBadge(int badgeIDNumber)
   {
-    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
-    var doorList = badgeDictionary[badgeIDNumber].ToList();
+    bool doorsRemoved = _badgeRepo.RemoveAllDoorsFromBadge(badgeIDNumber);
 
-    bool doorsRemoved = false;
-
-    foreach (string door in doorList)
-      {
-        doorList.Remove(door);
-      }
-
-      bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
-
-      if(doorList.Count == 0)
-      {
-        doorsRemoved = true;
-      }
-
-      if(doorsRemoved)
-      {
-        System.Console.WriteLine("All doors successfully removed.");
-      }
-      else 
-      {
-        System.Console.WriteLine("Door could not be removed. Try again later.");
-      }
+    if(doorsRemoved)
+    {
+      System.Console.WriteLine("All doors successfully removed.");
+    }
+    else 
+    {
+      System.Console.WriteLine("Doors could not be removed. Try again later.");
+    }
   }
 
   private void AddDoorToBadge(int badgeIDNumber)
   {
-    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
-    List<string> doorList = badgeDictionary[badgeIDNumber];
+    List<string> doorList = _badgeRepo.GetListByID(badgeIDNumber);
     
     // display doors the badge currently has access to
     ShowDoors(badgeIDNumber);
-    System.Console.WriteLine("What door would you like to add to badge" + badgeIDNumber + "?");
+    System.Console.WriteLine("What door would you like to add to badge " + badgeIDNumber + "?");
     string userInput = System.Console.ReadLine();
 
-    doorList.Add(userInput);
+    bool doorAdded = _badgeRepo.AddDoorToList(badgeIDNumber, userInput);
 
-    bool updated = _badgeRepo.UpdateExistingBadge(badgeIDNumber, doorList);
-
-    System.Console.WriteLine("Door " + userInput + " was added to the list.\n");
-    ShowDoors(badgeIDNumber);
+     if(doorAdded)
+      {
+        System.Console.WriteLine("Door successfully added.");
+        ShowDoors(badgeIDNumber);
+      }
+      else 
+      {
+        System.Console.WriteLine("Door could not be added. Try again later.");
+      }
   }
   private void ShowDoors(int badgeIDNumber)
   {
-    Dictionary<int, List<string>> badgeDictionary = _badgeRepo.GetDictionary();
-    List<string> doorList = badgeDictionary[badgeIDNumber];
+    List<string> doorList = _badgeRepo.GetListByID(badgeIDNumber);
     
     System.Console.Write("Badge " + badgeIDNumber + " has access to: ");
     
@@ -246,23 +256,6 @@ public class BadgesUI
     }
 
     System.Console.WriteLine();
-  }
-
-  // Display all badges
-  private void DisplayAllBadges()
-  {
-    Dictionary<int, List<string>> dictionary = _badgeRepo.GetDictionary();
-
-    System.Console.WriteLine("\nAll badges in dictionary: ");
-    System.Console.WriteLine("Badge ID     Doors it can access");
-
-    foreach (KeyValuePair<int, List<string>> badge in dictionary)
-    {
-      System.Console.Write(badge.Key + "         ");
-      badge.Value.ForEach(door => System.Console.Write(door + " "));
-      System.Console.WriteLine();
-    }
-
   }
 
   private void SeedContentList()

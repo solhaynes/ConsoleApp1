@@ -16,22 +16,62 @@ namespace Badges.Repository;
       return new Dictionary<int, List<string>>(_badgeDictionary);
     }
 
-    // Update
-    public bool UpdateExistingBadge(int originalID, List<string> newList)
+    public List<string> GetListByID(int id)
     {
-     // Find the badge
-      bool foundID = ValidateID(originalID);
-      List<string> oldBadgeList = _badgeDictionary[originalID];
+      return new List<string>(_badgeDictionary[id]);
+    }
 
-      // Update the badge list
-      if (foundID == true)
-     {
-        oldBadgeList = newList;
+    public void DisplayAllBadges()
+  {
+    System.Console.WriteLine("\nAll badges in dictionary: ");
+    System.Console.WriteLine("Badge ID     Doors it can access");
 
-       return true;
-      }
-      else 
+    foreach (KeyValuePair<int, List<string>> badge in _badgeDictionary)
+    {
+      System.Console.Write(badge.Key + "         ");
+      badge.Value.ForEach(door => System.Console.Write(door + " "));
+      System.Console.WriteLine();
+    }
+  }
+
+    // Update
+    public bool RemoveDoorFromList(int badgeID, string door)
+    {
+      int intitialCount = _badgeDictionary[badgeID].Count;
+      _badgeDictionary[badgeID].Remove(door);
+
+      if (intitialCount > _badgeDictionary[badgeID].Count)
       {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    public bool RemoveAllDoorsFromBadge(int badgeID)
+    {
+      _badgeDictionary[badgeID] = new List<string>();
+
+      if (_badgeDictionary[badgeID].Count == 0)
+      {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    public bool AddDoorToList(int badgeID, string door)
+    {
+      int intitialCount = _badgeDictionary[badgeID].Count;
+      _badgeDictionary[badgeID].Add(door);
+
+      if (intitialCount < _badgeDictionary[badgeID].Count)
+      {
+        return true;
+      }
+      else {
         return false;
       }
     }
@@ -63,4 +103,3 @@ namespace Badges.Repository;
       return false;
     }
   }
-
